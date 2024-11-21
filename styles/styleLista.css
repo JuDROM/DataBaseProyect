@@ -1,0 +1,92 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    color: #333;
+}
+
+h2 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #f4f4f4;
+    color: #333;
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+.header {
+    background-color: #5d3dd1;
+    color: white;
+    padding: 10px;
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn {
+    background-color: #5e3ae0;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 15px;
+    width: 50%;
+}
+
+.btn:hover {
+    background-color: #4a30b5;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    appearance: none;
+    background-color: white;
+}
+
+.add-student-form {
+    display: none;
+    margin-top: 20px;
+}
+.btnDelete {
+    background-color: #5e3ae0;
+    color: white;
+    padding: 10px ;
+    border: none;
+    border-radius: 5px;
+    width: 45px;
+}
+
+.btn:hover {
+    background-color: #4a30b5;
+}
