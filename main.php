@@ -2,11 +2,12 @@
 session_start();
 include('conexionDB.php');
 
-// Autenticacin}on
+// Autenticacion
 if (!isset($_SESSION['username'])) {
     header("Location: index.php");
     exit();
 }
+
 $username = $_SESSION['username'];
 $query = pg_query("
     SELECT nomb_cur FROM cursos");
@@ -20,7 +21,6 @@ $queryEstudiantes = pg_query('SELECT nomb_est FROM estudiantes');
 $queryEstudiantesDelete = pg_query('SELECT cod_est FROM estudiantes');
 $queryEstudiantesUpdate = pg_query('SELECT cod_est FROM estudiantes');
 
-$newCodEst = $_POST["newCodEst"];
 $newNombEst = $_POST["newNombEst"];
 $codEstActual = "";
 $nombEstActual="";
@@ -52,86 +52,117 @@ if (isset($_POST['updateDocente'])) {
 //CRUD ESTUDIANTES
 //Crear
 if (isset($_POST['addEstudiante'])) {
-    echo "test";
     $newCodEst = $_POST['newCodEst'];
     $newNombEst = $_POST['newNombEst'];
     $queryValidarEstudiantee = pg_num_rows(pg_query("SELECT cod_est FROM estudiantes WHERE cod_est='$newCodEst'"));
     
     if ($queryValidarEstudiante > 0){
         echo "<script>alert('El codigo \"$newCodEst\" ya existe. Por favor, ingrese un nombre diferente.');</script>";
-    }else{ $insertEstudiante = pg_query("INSERT INTO estudiantes(cod_est,nomb_est) VALUES ($newCodEst, '$newNombEst')");
-        echo "<script> alert('Estudiante ingresado con exito');</script>";}
-    
-}
-// Eliminar
-if (isset($_POST['deleteEstudiante'])) {
-    $codEst = $_POST['codEst'];
-    $nombEst = "";
-    $deleteEstudiante = pg_query("DELETE FROM estudiantes WHERE cod_est ='$codESt'");
-    $codEstActual = $_POST['codEstActual'];
-
-    $queryUpdateEstudiante = pg_query("UPDATE estudiantes SET cod_est = '$newCodEstAct', nomb_est = '$newNombEstAct' WHERE cod_est = '$codEstActual'");
+    }else{ 
+        $insertEstudiante = pg_query("INSERT INTO estudiantes(cod_est,nomb_est) VALUES ($newCodEst, '$newNombEst')");
+        echo "<script> alert('Estudiante ingresado con exito');</script>";
+        echo pg_last_error();
+    }
     header("Location: " . $_SERVER['PHP_SELF']);
     exit();
 }
 
-if (isset($_POST['cargarEstudiante'])) {
-    $codEstActual = $_POST['codEstActual'];
-    $newNombEstAct= pg_fetch_assoc(pg_query("SELECT nomb_est FROM estudiantes where cod_est = '$codEstActual'"))['nomb_est'];
-}
-if (isset($_POST['save'])) {
-    $nombEst = pg_fetch_assoc(pg_query("SELECT nomb_est FROM estudiantes WHERE cod_est='$codEst'"))['nomb_est'];
-}
-if (isset($_POST['codEstActual'])) {
-    $codEstActual = $_POST['codEstActual'];
-    $nombEstActual = pg_fetch_assoc(pg_query("SELECT nomb_est FROM estudiantes WHERE cod_est = '$codEstActual'"))['nomb_est'];
-}
+// Eliminar
+    if (isset($_GET['confirmDelete'])) {
+        $confirmDelete = $_GET['confirmDelete'];
+        $_SESSION['confirmDelete'] = $confirmDelete;
+    }
+    if (isset($_SESSION['confirmDelete'])) {
+        $confirmDelete = $_SESSION['confirmDelete'];
+        $codEst = $_SESSION["codEst"];
+        if($confirmDelete == 1){
+            $deleteEstudiante = pg_query("DELETE FROM estudiantes WHERE cod_est ='$codEst'");
+        }
+        $codEst = "";
+        unset($_SESSION['confirmDelete']);
+        unset($_SESSION['codEst']);
+        unset($_POST['confirmDelete']);
+        unset($_POST['codEst']);
+        $codEstActual = $_POST['codEstActual'];
+        echo '<script>window.location.href = "main.php";</script>';
+        exit();
+    }
+        
+    if (isset($_POST['saveEstudiante'])) {
+        $codEst = $_POST['codEst'];
+        $_SESSION["codEst"] = $codEst;
+        $nombEst = "";
+        $nombEst = pg_fetch_assoc(pg_query("SELECT nomb_est FROM estudiantes WHERE cod_est='$codEst'"))['nomb_est'];
+    }
+// Actualizar Estudiante
+    if (isset($_POST['updateEstudiante'])) {
+        $codEst = $_POST['codEst'];
+        $newCodEst = $_POST['newCodEst'];
+        $newNombEst = $_POST['newNombEst'];
+        $updateEst = pg_query("UPDATE estudiantes SET cod_est = '$newCodEst', nomb_est = '$newNombEst' WHERE cod_est = '$codEst'");
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    }
+
+        if (isset($_POST['cargarEstudiante'])) {
+            $codEstActual = $_POST['codEstActual'];
+            $newNombEstAct= pg_fetch_assoc(pg_query("SELECT nomb_est FROM estudiantes where cod_est = '$codEstActual'"))['nomb_est'];
+        }
+    
+    if (isset($_POST['codEstActual'])) {
+        $codEstActual = $_POST['codEstActual'];
+        $nombEstActual = pg_fetch_assoc(pg_query("SELECT nomb_est FROM estudiantes WHERE cod_est = '$codEstActual'"))['nomb_est'];
+    }
 
 //CRUD CURSOS
 //Crear
-if (isset($_POST['addCurso'])) {
-    $newNombCur = $_POST["newNombCur"];
-    $cursoExistente = pg_query("SELECT nomb_cur FROM cursos WHERE nomb_cur = '$newNombCur'");
-    echo pg_num_rows($cursoExistente);
-    if (pg_num_rows($cursoExistente) > 0) {
-        echo "<script>alert('El curso \"$newNombCur\" ya existe. Por favor, ingrese un nombre diferente.');</script>";
-        
-    } else {
-        $result = pg_query("SELECT cod_doc FROM docentes WHERE nomb_doc = '$CnewNombDoc'");
-        if ($row = pg_fetch_assoc($result)) {
-            $CnewCodDoc = $row['cod_doc'];
-            $insertCurso = pg_query("INSERT INTO cursos(nomb_cur, cod_doc) VALUES ('$newNombCur', '$CnewCodDoc')");
+    if (isset($_POST['addCurso'])) {
+        $newNombCur = $_POST["newNombCur"];
+        $cursoExistente = pg_query("SELECT nomb_cur FROM cursos WHERE nomb_cur = '$newNombCur'");
+        echo pg_num_rows($cursoExistente);
+        if (pg_num_rows($cursoExistente) > 0) {
+            echo "<script>alert('El curso \"$newNombCur\" ya existe. Por favor, ingrese un nombre diferente.');</script>";
+            
+        } else {
+            $result = pg_query("SELECT cod_doc FROM docentes WHERE nomb_doc = '$CnewNombDoc'");
+            if ($row = pg_fetch_assoc($result)) {
+                $CnewCodDoc = $row['cod_doc'];
+                $insertCurso = pg_query("INSERT INTO cursos(nomb_cur, cod_doc) VALUES ('$newNombCur', '$CnewCodDoc')");
+            }
         }
+        
     }
-    
-}
 // Eliminar
-if (isset($_POST['deleteCurso'])) {
-    $nombCur= $_POST['nombCur'];
-    $deleteCurso = pg_query("DELETE FROM cursos WHERE nomb_cur = '$nombCur'");
-    if($deleteCurso){  
-        echo "Actualización exitosa.";
-    } else {
-    exit();
-}
-}
-// Actualizar
-if (isset($_POST['updateCurso'])) {
-    $nombCurActual = $_POST['nombCurActual']; // con el codigo mostrar el nombre
-    $newNombCurAct = $_POST['newNombCurAct'];
-    $CUnewNombDoc = $_POST['CUnewNombDoc'];
-
-    $result = pg_query("SELECT cod_doc FROM docentes WHERE nomb_doc = '$CUnewNombDoc'");
-    
-    $updateCurso = pg_query("UPDATE cursos SET nomb_cur = '$newNombCurAct', cod_doc= '$CnewCodDoc' WHERE nomb_cur = '$nombCurActual'");
-    if($updateCurso){
-        echo "se hizo";
-    } else {
-        echo "no se hizo". pg_last_error();
+    if (isset($_POST['deleteCurso'])) {
+        $nombCur= $_POST['nombCur'];
+        $deleteCurso = pg_query("DELETE FROM cursos WHERE nomb_cur = '$nombCur'");
+        if($deleteCurso){  
+            echo "Actualización exitosa.";
+        } else {
+        exit();
     }
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit();
-}  
+    }
+// Actualizar
+    if (isset($_POST['updateCurso'])) {
+        $nombCurActual = $_POST['nombCurActual']; // con el codigo mostrar el nombre
+        $newNombCurAct = $_POST['newNombCurAct'];
+        $CUnewNombDoc = $_POST['CUnewNombDoc'];
+
+        $CUnewCodDoc = pg_fetch_assoc(pg_query("SELECT cod_doc FROM docentes WHERE nomb_doc = '$CUnewNombDoc'"))["cod_doc"];
+        
+        $updateCurso = pg_query("UPDATE cursos SET nomb_cur = '$newNombCurAct', cod_doc= '$CUnewCodDoc' WHERE nomb_cur = '$nombCurActual'");
+        if($updateCurso){
+            echo "se hizo";
+        } else {
+            echo "no se hizo". pg_last_error();
+        }
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    }
+
+if(isset($_POST["cargarCurso"])){
+    $CUNombDocActual= pg_fetch_assoc(pg_query("SELECT nomb_doc FROM cursos where cod_doc = '$codDocActual'"))['nomb_est'];
+}
 ?>
 
 <!DOCTYPE html>
@@ -139,7 +170,7 @@ if (isset($_POST['updateCurso'])) {
 <head>
     <meta charset="UTF-8">
     <title>Registro y control</title>
-    <link rel="stylesheet" href="styles/coursesStyle.css">
+    <link rel="stylesheet" href="styles/coursesStyle.css?ver=<?php echo time(); ?>">
     <script>
         function toggleAddStudentForm() {
             var form = document.getElementById("addStudentForm");
@@ -149,51 +180,72 @@ if (isset($_POST['updateCurso'])) {
 </head>
 <body>
 
-
+<!-- CODIGO PRINCIPAL-->
 <div class="container">
-    <!-- Encabezado principal -->
+    <!-- Encabezado principal y fecha -->
     <div class="header">  <label for="cod_est_nuevo">Código del Estudiante:</label>
         <span>CONTROL DE </span>
         <span class="date"><?php echo $fechaActual; ?></span>
     </div>
-
     <div class="base-container">
+
+<!-- MANEJO Y BUSQUEDA DE CURSOS (ARREGLAR)-->
+
     <div class="form-container">
         <h3 class="form-header">CURSOS EXISTENTES</h3>
         <div class="form-content">
-            <form method="POST" action="listadoEstudiantes.php" class="selectors-container">
-                <label for="cursos">Cursos:</label>
-                <select name="nomb_cur" id="cursos" required>
-                    <option value="">Selecciona un curso</option>
-                    <?php
-                    while ($row = pg_fetch_assoc($query)) {
-                        echo '<option value="' . htmlspecialchars($row['nomb_cur']) . '">' . htmlspecialchars($row['nomb_cur']) . '</option>';
-                    }
-                    ?>
-                </select>
-                <label for="periodo">Período:</label>
-                <select name="periodo" id="periodo" required>
-                    <option value="1">Periodo I</option>
-                    <option value="2">Periodo II</option>
-                </select>
-                
-                <label for="year">Año:</label>
-                <input type="text" name="year" id="year" placeholder="2024" pattern="\d+" oninput="validateNumber(this);" requied title="Ingrese un año de 4 dígitos entre 1944 y 2104">
+        <form method="POST" action="listadoEstudiantes.php" class="selectors-container" id="form">
+    <label for="cursos">Cursos:</label>
+    <select name="nomb_cur" id="cursos" required>
+        <option value="">Selecciona un curso</option>
+        <?php
+        while ($row = pg_fetch_assoc($query)) {
+            echo '<option value="' . htmlspecialchars($row['nomb_cur']) . '">' . htmlspecialchars($row['nomb_cur']) . '</option>';
+        }
+        ?>
+    </select>
 
-                <label for="estudiantes" style="font-weight: bold; display: block; margin-top: 10px;">Estudiantes:</label>
-                <button type="submit" name="verListado" class="btn">Ver listado</button>
-                    
-                <label for="notas" style="font-weight: bold; display: block; margin-top: 10px;" required>Estudiantes:</label>
-                <button type="submit" name="verNotas" class="btn"><bold>Ver y editar notas</bold></button>
-            
-            </form>
+    <label for="periodo">Período:</label>
+    <select name="periodo" id="periodo">
+        <option value="1">Periodo I</option>
+        <option value="2">Periodo II</option>
+    </select>
+
+    <label for="year">Año:</label>
+    <input type="text" name="year" id="year" placeholder="2024" pattern="\d+"
+     oninput="validateNumber(this);" requied title="Ingrese un año de 4 dígitos entre 1944 y 2104">
+
+    <label for="estudiantes" style="font-weight: bold; display: block; margin-top: 10px;">Estudiantes:</label>
+    <button type="submit" name="verListado" class="btn">Ver listado</button>
+
+    <label for="notas" style="font-weight: bold; display: block; margin-top: 10px;">Notas:</label>
+    <button type="submit" name="verNotas" class="btn">Ver y editar notas</button>
+</form>
+
+<script>
+    document.getElementById('form').addEventListener('submit', function (event) {
+        const yearField = document.getElementById('year');
+        const yearValue = yearField.value.trim();
+        const yearRegex = /^\d{4}$/;
+
+        if (!yearRegex.test(yearValue) || yearValue < 1900 || yearValue > new Date().getFullYear() + 10) {
+            alert('Por favor, ingrese un año válido (4 dígitos y mayor que 1900).');
+            event.preventDefault();
+            yearField.focus();
+            return;
+        }
+    });
+</script>
         </div></div>
 
         
-
+<!--DOCENTES -->
         <div class="form-container">
         <h3 class="form-header">GESTIÓN DE DOCENTES</h3>
         <div class="form-content">
+
+<!-- CREAR DOCENTES -->
+
             <form method="POST" class="selectors-container">
                 <h4>Añadir Docente</h4>
                 <label for="newNombDoc">Nombre del Docente:</label>
@@ -205,13 +257,14 @@ if (isset($_POST['updateCurso'])) {
                 <button type="submit" name="addDocente" class="btn">Añadir Docente</button>
             </form>
 
+<!-- ELIMINAR DOCENTES -->
+
             <form method="POST" class="selectors-container">
                 <h4>Eliminar Docente</h4>
                 <label for="nombreDocente">Nombre del Docente:</label>
                 <select name="nombreDocente" id="nombreDocente" required>
                     <option value="">Selecciona un docente</option>
                     <?php
-                    // Generar opciones desde la consulta PHP
                     while ($row = pg_fetch_assoc($queryDocentes)) {
                         echo '<option value="' . htmlspecialchars($row['nomb_doc']) . '">' . htmlspecialchars($row['nomb_doc']) . '</option>';
                     }
@@ -219,6 +272,10 @@ if (isset($_POST['updateCurso'])) {
                 </select>
                 <button type="submit" name="deleteDocente" class="btn">Eliminar Docente</button>
             </form>
+            
+
+<!-- ACTUALIZAR DOCENTES -->
+
             <form method="POST" class="selectors-container">
                 <h4>Actualizar Docente</h4>
                 <div id="seleccionDocente">
@@ -238,7 +295,6 @@ if (isset($_POST['updateCurso'])) {
                     <button type="submit" name="updateDocente" class="btn">Actualizar Docente</button>
                 </div>
             </form>
-
             </div>
     <script>
     document.getElementById('cargarDocente').addEventListener('click', function () {
@@ -253,11 +309,16 @@ if (isset($_POST['updateCurso'])) {
     });
     </script>
         </div>
-        
+
+
+
+<!--CURSOS -->
         <div class="form-container">
         <h3 class="form-header">CREACIÓN DE CURSOS</h3>
-        <div class="form-content">
-            
+        <div class="form-content">  
+
+<!--CREAR CURSO -->
+
             <form method="POST" class="selectors-container">
                 <h4>Añadir curso</h4>
                 <label for="newNombCur">Nombre del Nuevo Curso:</label>
@@ -274,6 +335,10 @@ if (isset($_POST['updateCurso'])) {
                 </select>
                 <button type="submit" name="addCurso" class="btn">Añadir Curso</button>
             </form>
+
+
+<!--ELIMINAR CURSO -->
+
             <form method="POST" class="selectors-container">
                 <h4>Eliminar Curso</h4>
                 <label for="nombCur">Nombre del Curso:</label>
@@ -289,22 +354,26 @@ if (isset($_POST['updateCurso'])) {
                 <button type="submit" name="deleteCurso" class="btn">Eliminar Curso</button>
             </form>
 
+<!--ACTUALIZAR CURSO -->
+
             <form method="POST" class="selectors-container">
                 <h4>Actualizar Curso</h4>
                 <div id="seleccionCurso">
-                <select name="nombCurActual" id="nombCurActual" required>
-                    <option value="">Selecciona un curso</option>
-                        <?php while ($row = pg_fetch_assoc($queryCursos2)) { echo '<option value="' . $row['nomb_cur'] . '">' . $row['nomb_cur'] . '</option>';} ?>
-                </select>
-                        <button type="button" name="cargarCurso" class="btn">Cargar Datos</button>
+                    <select name="nombCurActual" id="nombCurActual" required>
+                        <option value="">Selecciona un curso</option>
+                        <?php while ($row = pg_fetch_assoc($queryCursos2)) { 
+                            echo '<option value="' . $row['nomb_cur'] . '">' . $row['nomb_cur'] . '</option>';
+                        } ?>
+                    </select>
+                    <button type="submit" name="cargarCurso" class="btn">Cargar Datos</button>
                 </div>
-
-                <div id="actualizarCurso" style="display: none;">
+            <!--INGRESO DATOS DE ACTUALIZACION -->
+                <div id="actualizarCurso" style=<?php if($flag){echo 'display : "" ;';}else{echo 'display: "none";';}; ?>>
                     <label for="newNombCurAct">Nombre del Nuevo Curso:</label>
-                    <input type="text" name="newNombCurAct" id="newNombCurAct" required>
+                    <input type="text" name="newNombCurAct" id="newNombCurAct" required value="<?php echo htmlspecialchars($nombCurActual);?>">
                     
                     <label for="CUnewNombDoc">Nombre del Docente</label>
-                    <select name="CUnewNombDoc" id="CUnewNombDoc" required>
+                    <select name="CUnewNombDoc" id="CUnewNombDoc" required value="<?php echo htmlspecialchars($CUNombDocActual);?>">
                         <option value="">Selecciona un docente</option>
                         <?php
                         while ($row = pg_fetch_assoc($queryDocentesToCursos2)) {
@@ -317,9 +386,13 @@ if (isset($_POST['updateCurso'])) {
             </form>
         </div></div>
 
+<!-- ESTUDIANTES -->
         <div class="form-container">
         <h3 class="form-header">REGISTRO DE ESTUDIANTES</h3>
         <div class="form-content">
+
+<!--AÑADIR ESTUDIANTES -->
+
             <form method="POST" class="selectors-container">
                 <h4>Añadir Estudiante</h4>
                 <label for="newCodEst">Codigo del estudiante:</label>
@@ -330,33 +403,28 @@ if (isset($_POST['updateCurso'])) {
                 <button type="submit" name="addEstudiante" class="btn">Añadir Estudiante</button>
             </form>
 
+<!--ELIMINAR ESTUDIANTES -->
+
             <form method="POST" class="selectors-container">
                 <h4>Eliminar Estudiante</h4><br>
-                <label for="codEst">Codigo del estudiante:</label>
-                <select name="codEst" id="codEstAct" value="<?php echo isset($codEst) ? $codEst : "";?>" required>
+                <label for="codEst">Código del estudiante:</label>
+                <select name="codEst" id="codEstAct" value="<?php echo isset($codEst) ? $codEst : ""; ?>" required>
                     <option value="">Selecciona un estudiante</option>
-                        <?php while ($row = pg_fetch_assoc($queryEstudiantesDelete)) { 
-                        $selected = isset($_POST['codEstActual']) && $_POST['codEstActual'] == $row['cod_est'] ? 'selected' : '';
-                        echo '<option value="' . htmlspecialchars($row['cod_est']) . '" ' . $selected . '>' . htmlspecialchars($row['cod_est']) . '</option>';} ?>
-                </select> 
-                <button name="save" type="submit" class="btn">Buscar Estudiante</button><br><br>
-                <?php if(isset($nombEst)){
-                    echo '<label for="nombEst">Nombre del Estudiante:</label> <div class="info" id="mensaje"> '. $nombEst .'</div>';
-                }?>
-                
-                <button onclick="confirmarEliminacion()" type="submit" name="deleteEstudiante" class="btn">Eliminar Estudiante</button>
+                    <?php while ($row = pg_fetch_assoc($queryEstudiantesDelete)) { 
+                        $selected = isset($_POST['codEst']) && $_POST['codEst'] == $row['cod_est'] ? 'selected' : '';
+                        echo '<option value="' . htmlspecialchars($row['cod_est']) . '" ' . $selected . '>' . htmlspecialchars($row['cod_est']) . '</option>';
+                    } ?>
+                </select>
+                <button name="saveEstudiante" type="submit" class="btn">Buscar Estudiante</button><br><br>
+                <?php if ($nombEst) {
+                    echo '<label for="nombEst">Nombre del Estudiante:</label> <div class="info" id="mensaje"> ' . $nombEst . '</div>';
+                } ?>
+
+                <!-- Eliminar estudiante -->
+                <button onclick="confirmarEliminacion(event)" type="button" class="btn">Eliminar Estudiante</button>
             </form>
 
-             <!-- //Crear
-        // Actualizar
-        if (isset($_POST['updateEstudiante'])) {
-            $codEstActual = $_POST['codEstActual']; // con el codigo mostrar el nombre
-            $newCodEst = $_POST['newCodEst'];
-            $newNombEst = $_POST['newNombEst'];
-            $updateEst = pg_query("UPDATE estudiantes SET nomb_est = '$newNombEst', cod_est= '$newCodEst' WHERE cod_est = '$codEstActual'");
-            header("Location: " . $_SERVER['PHP_SELF']);
-            exit();
-        }-->
+<!--ACTUALIZAR ESTUDIANTES -->
 
             <form method="POST" class="selectors-container">
                 <h4>Actualizar Estudiante</h4>
@@ -383,43 +451,69 @@ if (isset($_POST['updateCurso'])) {
     </div>
 
     <script>
-        function confirmarEliminacion() {
-            // Usamos la variable PHP directamente en el alert de JavaScript
+        function confirmarEliminacion(event) {
+            // Obtener el nombre del estudiante desde PHP
             var nomb = <?php echo json_encode($nombEst); ?>;
-            if (confirm("¿Eliminar " + nomb + "?" )) {
-                // Aquí puedes agregar el código para continuar con la eliminación si el usuario confirma
-                alert("Eliminando " + nombre);
+
+            if (confirm("¿Eliminar " + nomb + "?")) {
+                // Redirigir con confirmación de eliminación
+                alert("Eliminando " + nomb);
+                window.location.href = "main.php?confirmDelete=1";
             } else {
+                // Redirigir con cancelación
                 alert("Operación cancelada");
+                window.location.href = "main.php?confirmDelete=0";
             }
         }
         document.addEventListener("DOMContentLoaded", function() {
-            // Selecciona todos los encabezados de cada form-container
             const headers = document.querySelectorAll(".form-header");
 
-            headers.forEach((header) => {
-                const content = header.nextElementSibling; // Selecciona el siguiente elemento (form-content)
-
-                // Oculta el contenido al inicio
+            headers.forEach((header, index) => {
+                const content = header.nextElementSibling;
+                content.style.transition = "none";
                 content.style.maxHeight = "0";
                 content.style.overflow = "hidden";
-                content.style.transition = "max-height 0.3s ease";
 
-                // Agrega evento de clic en el encabezado
+                const isOpen = localStorage.getItem(`form-header-${index}`) === "true";
+                if (isOpen) {
+                    content.style.maxHeight = 3000 + "px";
+                }
+                content.offsetHeight;
+                content.style.transition = "max-height 0.3s ease";
                 header.addEventListener("click", () => {
-                    // Alterna la visibilidad del contenido
                     if (content.style.maxHeight === "0px") {
                         content.style.maxHeight = 3000 + "px";
+                        localStorage.setItem(`form-header-${index}`, "true");
                     } else {
                         content.style.maxHeight = "0";
+                        localStorage.setItem(`form-header-${index}`, "false");
                     }
                 });
             });
         });
-        function validateNumber(input) {
-            // Permite solo números (elimina todo lo que no sea un dígito)
-            input.value = input.value.replace(/[^0-9]/g, '');
-        }
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const inputs = document.querySelectorAll("input");
+
+            inputs.forEach((input) => {
+                // Verifica el estado inicial
+                toggleEmptyClass(input);
+
+                // Escucha eventos de entrada para verificar cambios
+                input.addEventListener("input", () => {
+                    toggleEmptyClass(input);
+                });
+            });
+
+            function toggleEmptyClass(input) {
+                if (input.value.trim() === "") {
+                    input.classList.add("empty"); // Campo vacío
+                } else {
+                    input.classList.remove("empty"); // Campo con valor
+                }
+            }
+        });
 </script>
 
 

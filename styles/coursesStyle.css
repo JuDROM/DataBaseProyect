@@ -87,7 +87,7 @@ h2 {
     margin-top: 10px;
 }
 .selectors-container select, .info,
-.selectors-container input {
+.selectors-container input, .selectors-container input.empty {
     width: 100%;
     padding: 8px;
     margin-top: 5px;
@@ -97,27 +97,16 @@ h2 {
     box-sizing: border-box; /* Asegura que el padding no aumente el tamaño del input */
 }
 
-/* Estilo para inputs válidos */
-.selectors-container input:valid {
-    border: 1px solid #4CAF50;
-    background-color: #e8f5e9;
-}
 
 /* Estilo para inputs inválidos */
-.selectors-container input:invalid {
+.selectors-container input:invalid:not(.empty) {
     border: 1px solid #f44336;
     background-color: #ffebee;
 }
 /* Estilo cuando el input es válido */
-.selectors-container input:valid {
+.selectors-container input:valid:not(.empty) {
     border: 1px solid #4CAF50;
     background-color: #e8f5e9;
-}
-
-/* Estilo cuando el input es inválido */
-.selectors-container input:invalid {
-    border: 1px solid #f44336;
-    background-color: #ffebee;
 }
 /* Botón */
 .btn {
