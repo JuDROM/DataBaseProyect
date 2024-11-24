@@ -10,7 +10,6 @@ $year = $_SESSION['year'] ?? '';
 // Obtener el código del curso
 $cod_cur_result = pg_query("SELECT cod_cur FROM cursos WHERE nomb_cur = '$nomb_cur'");
 $cod_cur = pg_fetch_result($cod_cur_result, 0, 0);
-echo $nomb_cur . "  ". $periodo . "  " . $year;
 // Validación y proceso de añadir una nueva nota
 if (isset($_POST['addNota'])) {
     $posicion = $_POST['posicion'];
@@ -18,7 +17,7 @@ if (isset($_POST['addNota'])) {
     $porcentaje = $_POST['porcentaje'];
     
     // Obtener la suma actual de los porcentajes
-    $sumaPorcentajesQuery = pg_query("SELECT COALESCE(SUM(porcentaje), 0) as total_porcentaje FROM notas WHERE cod_cur = '$cod_cur'");
+    $sumaPorcentajesQuery = pg_query("SELECT COALESCE(SUM(porcentaje), 0) as total_porcentaje FROM notas WHERE cod_cur = '$cod_cur' AND year=$year AND periodo=$periodo");
     $sumaPorcentajes = pg_fetch_result($sumaPorcentajesQuery, 0, 'total_porcentaje');
     
     // Verificar que la suma no exceda el 100%
@@ -57,7 +56,7 @@ if (isset($_POST['updateNota'])) {
     $nuevo_porcentaje = $_POST['nuevo_porcentaje'];
 
     // Obtener la suma de porcentajes excluyendo el porcentaje actual de la nota que se está editando
-    $sumaPorcentajesQuery = pg_query("SELECT COALESCE(SUM(porcentaje), 0) as total_porcentaje FROM notas WHERE cod_cur = '$cod_cur' AND nota != '$nota_id'");
+    $sumaPorcentajesQuery = pg_query("SELECT COALESCE(SUM(porcentaje), 0) as total_porcentaje FROM notas WHERE cod_cur = '$cod_cur' AND year = $year AND periodo = $periodo AND nota != '$nota_id'");
     $sumaPorcentajes = pg_fetch_result($sumaPorcentajesQuery, 0, 'total_porcentaje');
 
     // Validar que la nueva suma no exceda el 100%

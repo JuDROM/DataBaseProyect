@@ -20,6 +20,7 @@ if (isset($_POST['addCalificacion'])) {
 
     $insertCalificacionQuery = pg_query("INSERT INTO calificaciones (nota, valor, fecha, cod_cur, cod_est, year, periodo) VALUES ('$nota_id', '$valor', '$fecha', '$cod_cur', '$cod_est', '$year', '$periodo')");
     echo $insertCalificacionQuery ? "<p>Calificación añadida correctamente.</p>" : "<p>Error al añadir la calificación.</p>";
+    echo pg_last_error();
 }
 
 // Proceso para eliminar una calificación
@@ -47,7 +48,7 @@ if (!$calificacionesQuery) {
 }
 
 // Consulta para obtener el listado de estudiantes inscritos en el curso
-$estudiantesQuery = pg_query("SELECT cod_est FROM inscripciones WHERE cod_cur = '$cod_cur'");
+$estudiantesQuery = pg_query("SELECT cod_est FROM inscripciones WHERE cod_cur = '$cod_cur' AND periodo = $periodo AND year=$year");
 ?>
 
 <!DOCTYPE html>

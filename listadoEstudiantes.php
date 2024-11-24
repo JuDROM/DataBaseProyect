@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 $user = $_SESSION['username'] ?? '';
 $nomb_cur = $_SESSION['nomb_cur'] ?? '';
+$cod_cur = pg_fetch_assoc(pg_query("SELECT cod_cur FROM cursos WHERE nomb_cur ='$nombCur'"))['cod_cur'];
 $periodo = $_POST['periodo'] ?? '';
 $year = $_SESSION['year'] ?? '';
 
@@ -27,20 +28,28 @@ if (isset($_POST['eliminar'])) {
     } else {
         echo "<p>Inscripción eliminada correctamente.</p>";
     }
+    $queryConfirm = pg_query("SELECT * FROM notas WHERE cod_cur ='$cod_cur' AND year=$year AND periodo=$periodo");
+    if(pg_num_rows($queryConfirm) < 0){
+        $queryDelete = pg_query("DELETE FROM cursosemestres WHERE year= $year AND periodo=$periodo AND nomb_cur='$nomb_cur'");
+    }
 }
 
 // Añadir la inscripción si se presiona el botón añadir
 if (isset($_POST['addEstudiante'])) {
     $cod_est_nuevo = $_POST['cod_est_nuevo'];
     $cod_cur = pg_fetch_result(pg_query("SELECT cod_cur FROM cursos WHERE nomb_cur = '$nomb_cur'"), 0, 0);
-    
+    $queryConfirm = pg_query("SELECT * FROM cursosemestres WHERE year= $year AND periodo=$periodo AND cod_cur='$cod_cur'");
+    if(pg_num_rows($queryConfirm) == 0){
+        $queryCreate = pg_query("INSERT INTO cursosemestres(cod_cur,periodo,year) VALUES('$cod_cur', $periodo,$year)");
+    }
     $insertQuery = pg_query("INSERT INTO inscripciones (cod_cur, cod_est, year, periodo) VALUES ('$cod_cur', '$cod_est_nuevo', $year, $periodo)");
-
+    echo pg_last_error();
     if (!$insertQuery) {
         echo "<p>Error al añadir la inscripción.</p>";
     } else {
         echo "<p>Inscripción añadida correctamente.</p>";
     }
+    
 }
 
 // Consulta para obtener los estudiantes inscritos
@@ -81,15 +90,13 @@ if (!$studentQuery) {
     <div class="header">
         <div>Gestión de Inscripciones</div>
         <?php
-        // Supongo que ya tienes la variable $username definida, obtenida de la sesión o de la autenticación
         $href = ($user === 'root') ? 'main.php' : 'courses.php';
         ?>
         <a href=<?php echo $href?> style="color: white; text-decoration: none;">Inicio</a>
     </div>
 
     <h2>Estudiantes inscritos en <?php echo htmlspecialchars($nomb_cur) . " (" . ($periodo == 1 ? "Periodo I" : "Periodo II") . " - " . htmlspecialchars($year) . " )"; ?> </h2>
-
-    <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
+        <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
         <input type="hidden" name="nomb_cur" value="<?php echo htmlspecialchars($nomb_cur); ?>">
         <input type="hidden" name="periodo" value="<?php echo htmlspecialchars($periodo); ?>">
         <input type="hidden" name="year" value="<?php echo htmlspecialchars($year); ?>">
