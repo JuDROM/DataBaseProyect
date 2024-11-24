@@ -72,10 +72,6 @@ $fechaActual = date("d/m/Y");
             <input type="text" name="year" id="year" placeholder="2024"  title="Ingrese un año de 4 dígitos entre 1944 y 2104">
             <label for="estudiantes" style="font-weight: bold; display: block; margin-top: 10px;">Estudiantes:</label>
             <button type="submit" name="verListado" class="btn">Ver listado</button>
-                
-            <label for="notas" style="font-weight: bold; display: block; margin-top: 10px;">Notas:</label>
-            <button type="submit" name="verListado" class="btn">Ver y editar notas</button>
-        
         </form>
     </div>
 </div>

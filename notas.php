@@ -10,13 +10,13 @@ $year = $_SESSION['year'] ?? '';
 // Obtener el código del curso
 $cod_cur_result = pg_query("SELECT cod_cur FROM cursos WHERE nomb_cur = '$nomb_cur'");
 $cod_cur = pg_fetch_result($cod_cur_result, 0, 0);
-
+echo $nomb_cur . "  ". $periodo . "  " . $year;
 // Validación y proceso de añadir una nueva nota
 if (isset($_POST['addNota'])) {
     $posicion = $_POST['posicion'];
     $desc_nota = $_POST['desc_nota'];
     $porcentaje = $_POST['porcentaje'];
-
+    
     // Obtener la suma actual de los porcentajes
     $sumaPorcentajesQuery = pg_query("SELECT COALESCE(SUM(porcentaje), 0) as total_porcentaje FROM notas WHERE cod_cur = '$cod_cur'");
     $sumaPorcentajes = pg_fetch_result($sumaPorcentajesQuery, 0, 'total_porcentaje');
@@ -25,8 +25,13 @@ if (isset($_POST['addNota'])) {
     if (($sumaPorcentajes + $porcentaje) > 100) {
         echo "<p>Error: La suma de los porcentajes no puede exceder el 100%. Suma actual: $sumaPorcentajes%</p>";
     } else {
-        $insertNotaQuery = pg_query("INSERT INTO notas (cod_cur, posicion, desc_nota, porcentaje) VALUES ('$cod_cur', '$posicion', '$desc_nota', '$porcentaje')");
+        $queryConfirm = pg_query("SELECT * FROM cursosemestres WHERE year= $year AND periodo=$periodo AND cod_cur='$cod_cur'");
+        if(pg_num_rows($queryConfirm) == 0){
+            $queryCreate = pg_query("INSERT INTO cursosemestres(cod_cur,periodo,year) VALUES('$cod_cur', $periodo,$year)");
+        }
+        $insertNotaQuery = pg_query("INSERT INTO notas (cod_cur,year,periodo, posicion, desc_nota, porcentaje) VALUES ('$cod_cur',$year ,$periodo,'$posicion', '$desc_nota', '$porcentaje')");
         echo $insertNotaQuery ? "Nota añadida correctamente." : "Error al añadir la nota.";
+        echo pg_last_error();
     }
     
 }
@@ -36,7 +41,12 @@ if (isset($_POST['eliminarNota'])) {
     $nota_id = $_POST['nota_id'];
     $deleteNotaQuery = pg_query("DELETE FROM notas WHERE nota = '$nota_id'");
     echo $deleteNotaQuery ? "<p>Nota eliminada correctamente.</p>" : "<p>Error al eliminar la nota.</p>";
-    
+    $queryConfirm = pg_query("SELECT * FROM notas WHERE cod_cur ='$cod_cur' AND year=$year AND periodo=$periodo");
+    if(pg_num_rows($queryConfirm) <= 0){
+        $queryDelete = pg_query("DELETE FROM cursosemestres WHERE year= $year AND periodo=$periodo AND nomb_cur='$nomb_cur'");
+    }
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
 }
 
 // Proceso para actualizar una nota
@@ -57,10 +67,12 @@ if (isset($_POST['updateNota'])) {
         $updateNotaQuery = pg_query("UPDATE notas SET posicion = '$nueva_posicion', desc_nota = '$nueva_desc_nota', porcentaje = '$nuevo_porcentaje' WHERE nota = '$nota_id'");
         echo $updateNotaQuery ? "<p>Nota actualizada correctamente.</p>" : "<p>Error al actualizar la nota.</p>";
     }
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
 }
 
 // Consulta para obtener y ordenar las notas por posicion
-$notasQuery = pg_query("SELECT nota, posicion, desc_nota, porcentaje FROM notas WHERE cod_cur = '$cod_cur' ORDER BY posicion ASC");
+$notasQuery = pg_query("SELECT nota, posicion, desc_nota, porcentaje FROM notas WHERE cod_cur = '$cod_cur' AND periodo = $periodo AND year = $year ORDER BY posicion ASC");
 if (!$notasQuery) {
     echo "<p>Error en la consulta de notas.</p>";
     exit();
